@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🌸 Flutter Widget & Layouting  
 ### 🧩 HandsOn Day 9 — Refita Yunie
 
@@ -15,3 +16,6 @@ Tujuannya adalah untuk memahami dan menerapkan konsep **UI yang responsif, efisi
 ---
 
 ## 🧱 Struktur Folder
+=======
+# Flutter Widget & Layouting (HandsOn Day 9 - Refita Yunie)
+>>>>>>> f95cc19 (Hapus folder embedded repo dari index Git)

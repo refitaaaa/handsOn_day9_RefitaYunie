@@ -1,38 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
-
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
-
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="widget_layouting">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <title>widget_layouting</title>
-  <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dart Source Viewer - Refita Yunie</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      margin: 2rem;
+      background: #f9fafb;
+    }
+    h1 {
+      text-align: center;
+      color: #2b2d42;
+    }
+    .file-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 10px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <h1>📘 Dart Source Viewer</h1>
+  <div class="file-list" id="fileList">Memuat daftar file...</div>
+  <pre id="codeDisplay">Pilih file Dart untuk melihat isinya...</pre>
+
+  <script>
+    const repo = "refitaaaa/HandsOn_day9_Refita-Yunie"; // ganti sesuai repo
+    const fileList = document.getElementById("fileList");
+    const codeDisplay = document.getElementById("codeDisplay");
+
+    // Fungsi rekursif untuk ambil semua file .dart dari folder dan subfolder
+    async function getDartFiles(folder = "") {
+      try {
+        const url = folder ? `https://api.github.com/repos/${repo}/contents/${folder}` : `https://api.github.com/repos/${repo}/contents`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!Array.isArray(data)) return [];
+
+        let dartFiles = [];
+        for (const item of data) {
+          if (item.type === "file" && item.name.endsWith(".dart")) {
+            dartFiles.push(item);
+          } else if (item.type === "dir") {
+            const subFiles = await getDartFiles(item.path); // rekursif
+            dartFiles = dartFiles.concat(subFiles);
+          }
+        }
+        return dartFiles;
+      } catch (error) {
+        console.error("Error fetching files:", error);
+        return [];
+      }
+    }
+
+    // Menampilkan semua tombol file .dart
+    async function showFiles() {
+      fileList.textContent = "Memuat daftar file...";
+      const dartFiles = await getDartFiles();
+      if (dartFiles.length === 0) {
+        fileList.textContent = "Tidak ada file .dart ditemukan.";
+        return;
+      }
+      fileList.innerHTML = "";
+      dartFiles.forEach(file => {
+        const btn = document.createElement("button");
+        btn.textContent = file.path; // tampilkan path lengkap agar jelas
+        btn.onclick = () => loadCode(file.download_url);
+        fileList.appendChild(btn);
+      });
+    }
+
+    // Menampilkan isi file
+    async function loadCode(url) {
+      codeDisplay.textContent = "Memuat isi file...";
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        codeDisplay.textContent = text;
+      } catch (error) {
+        codeDisplay.textContent = "❌ Gagal memuat isi file.";
+      }
+    }
+
+    showFiles();
+  </script>
 </body>
 </html>
