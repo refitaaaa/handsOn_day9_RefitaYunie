@@ -1,47 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dart Source Viewer - Refita Yunie</title>
   <style>
-    body {
-      font-family: "Segoe UI", sans-serif;
-      margin: 2rem;
-      background: #f9fafb;
-    }
-    h1 {
-      text-align: center;
-      color: #2b2d42;
-    }
-    .file-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 20px;
-    }
-    button {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background: #2563eb;
-    }
-    pre {
-      background: #1e293b;
-      color: #e2e8f0;
-      padding: 16px;
-      border-radius: 10px;
-      overflow-x: auto;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
+    body { font-family: "Segoe UI", sans-serif; margin: 2rem; background: #f9fafb; }
+    h1 { text-align: center; color: #2b2d42; }
+    .file-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
+    button { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    button:hover { background: #2563eb; }
+    pre { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
   </style>
 </head>
 <body>
@@ -50,52 +19,49 @@
   <pre id="codeDisplay">Pilih file Dart untuk melihat isinya...</pre>
 
   <script>
-    const repo = "refitaaaa/HandsOn_day9_Refita-Yunie"; // ganti sesuai repo
+    const repo = "refitaaaa/HandsOn_day9_Refita-Yunie"; // ganti sesuai repo GitHubmu
     const fileList = document.getElementById("fileList");
     const codeDisplay = document.getElementById("codeDisplay");
 
-    // Fungsi rekursif untuk ambil semua file .dart dari folder dan subfolder
-    async function getDartFiles(folder = "") {
-      try {
-        const url = folder ? `https://api.github.com/repos/${repo}/contents/${folder}` : `https://api.github.com/repos/${repo}/contents`;
-        const response = await fetch(url);
-        const data = await response.json();
-        if (!Array.isArray(data)) return [];
+    // Fungsi fetch recursive untuk semua folder
+    async function fetchFiles(path = "") {
+      const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      let dartFiles = [];
 
-        let dartFiles = [];
-        for (const item of data) {
-          if (item.type === "file" && item.name.endsWith(".dart")) {
-            dartFiles.push(item);
-          } else if (item.type === "dir") {
-            const subFiles = await getDartFiles(item.path); // rekursif
-            dartFiles = dartFiles.concat(subFiles);
-          }
+      for (let item of data) {
+        if (item.type === "file" && item.name.endsWith(".dart")) {
+          dartFiles.push(item);
+        } else if (item.type === "dir") {
+          const nestedFiles = await fetchFiles(item.path);
+          dartFiles = dartFiles.concat(nestedFiles);
         }
-        return dartFiles;
+      }
+      return dartFiles;
+    }
+
+    // Tampilkan semua file dart sebagai tombol
+    async function showDartFiles() {
+      try {
+        const dartFiles = await fetchFiles();
+        if (dartFiles.length === 0) {
+          fileList.textContent = "Tidak ada file .dart ditemukan.";
+          return;
+        }
+        fileList.innerHTML = "";
+        dartFiles.forEach(file => {
+          const btn = document.createElement("button");
+          btn.textContent = file.path;
+          btn.onclick = () => loadCode(file.download_url);
+          fileList.appendChild(btn);
+        });
       } catch (error) {
-        console.error("Error fetching files:", error);
-        return [];
+        fileList.textContent = "❌ Gagal memuat daftar file: " + error.message;
       }
     }
 
-    // Menampilkan semua tombol file .dart
-    async function showFiles() {
-      fileList.textContent = "Memuat daftar file...";
-      const dartFiles = await getDartFiles();
-      if (dartFiles.length === 0) {
-        fileList.textContent = "Tidak ada file .dart ditemukan.";
-        return;
-      }
-      fileList.innerHTML = "";
-      dartFiles.forEach(file => {
-        const btn = document.createElement("button");
-        btn.textContent = file.path; // tampilkan path lengkap agar jelas
-        btn.onclick = () => loadCode(file.download_url);
-        fileList.appendChild(btn);
-      });
-    }
-
-    // Menampilkan isi file
+    // Fungsi menampilkan isi file
     async function loadCode(url) {
       codeDisplay.textContent = "Memuat isi file...";
       try {
@@ -107,7 +73,7 @@
       }
     }
 
-    showFiles();
+    showDartFiles();
   </script>
 </body>
 </html>
